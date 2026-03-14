@@ -16,14 +16,23 @@
         system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
-        in
-          (import self) { } {
+
+          uv-pythons = (import self) { } {
             inherit (pkgs) stdenv callPackage lib;
+          };
+
+        in
+           uv-pythons // {
+             doc = pkgs.callPackage ./doc {
+               inherit self uv-pythons;
+             };
           }
       );
 
       checks = forAllSystems (system: {
         "cpython-3_14_0" = self.packages.${system}."cpython-3.14.0";
+        "graalpy-3.10.0" = self.packages.${system}."graalpy-3.10.0";
+        "pypy-3.10.12" = self.packages.${system}."pypy-3.10.12";
       });
     };
 }

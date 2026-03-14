@@ -1,0 +1,8 @@
+[book]
+authors = ["adisbladis"]
+language = "en"
+src = "src"
+title = "uv-python.nix"
+
+[preprocessor.cmdrun]
+command = "mdbook-cmdrun"

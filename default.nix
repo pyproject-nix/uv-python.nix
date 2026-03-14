@@ -67,7 +67,6 @@ let
             # Create a name without arch/platform suffix
             name = lib.removeSuffix ("-${v.os}-${v.arch.family}${(if v.arch.variant != null then "-${v.arch.variant}" else "")}-${v.libc}") name;
             value = mkPython v;
-
           }
         ]
       else
