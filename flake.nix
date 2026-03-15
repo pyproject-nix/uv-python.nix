@@ -9,7 +9,7 @@
     { self, nixpkgs }:
     let
       inherit (nixpkgs) lib;
-      forAllSystems = lib.genAttrs lib.systems.flakeExposed;
+      forAllSystems = lib.genAttrs (lib.remove "x86_64-freebsd" lib.systems.flakeExposed);
     in
     {
       packages = forAllSystems (

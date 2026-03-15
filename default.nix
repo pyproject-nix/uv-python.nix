@@ -9,6 +9,7 @@ let
     mapAttrs
     filter
     groupBy
+    sort
     ;
 
   optionalString = cond: value: if cond then value else "";
@@ -90,8 +91,13 @@ let
         value = mkPython v;
       }) filtered
     )
-    // mapAttrs (_: candidates: packages.${(mkName (lib.last candidates))}) (
-      groupBy mkShortName releases
-    );
+    // mapAttrs (
+      _: candidates:
+      packages.${
+        (mkName (
+          lib.last (sort (a: b: a.major <= b.major && a.minor <= b.minor && a.patch <= b.patch) candidates)
+        ))
+      }
+    ) (groupBy mkShortName releases);
 in
 packages
