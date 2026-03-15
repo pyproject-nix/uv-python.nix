@@ -3,12 +3,27 @@
 }:
 let
   inherit (builtins)
-    head
-    splitVersion
     attrNames
     concatMap
     listToAttrs
+    mapAttrs
+    filter
+    groupBy
     ;
+
+  optionalString = cond: value: if cond then value else "";
+
+  mkShortName =
+    v:
+    "${v.name}-${toString v.major}.${toString v.minor}${
+      optionalString (v.variant != null) "+${v.variant}"
+    }";
+  mkName =
+    v:
+    "${v.name}-${toString v.major}.${toString v.minor}.${toString v.patch}${
+      optionalString (v.variant != null) "+${v.variant}"
+    }";
+
 in
 {
   stdenv,
@@ -17,7 +32,7 @@ in
   archVariant ? null,
 }:
 let
-  inherit (stdenv) isLinux isDarwin isFreeBSD;
+  inherit (stdenv) isLinux isDarwin;
 
   archFamily = if isDarwin then stdenv.targetPlatform.darwinArch else stdenv.targetPlatform.qemuArch;
 
@@ -26,8 +41,6 @@ let
       "linux"
     else if isDarwin then
       "darwin"
-    else if isFreeBSD then
-      "freebsd${head (splitVersion stdenv.cc.libc.version)}"
     else
       throw "Unsupported platform";
 
@@ -46,32 +59,39 @@ let
     in
     python;
 
-  filtered = listToAttrs (
-    concatMap (
-      name:
-      let
-        v = download-metadata.${name};
-      in
-      if
-        (
-          # Match architecture/variant
-          v.arch.family == archFamily
-          && v.arch.variant == archVariant
-          # Match os/platform
-          && v.os == os
-          && (v.libc == "none" || v.libc == libc)
-        )
-      then
-        [
-          {
-            # Create a name without arch/platform suffix
-            name = lib.removeSuffix ("-${v.os}-${v.arch.family}${(if v.arch.variant != null then "-${v.arch.variant}" else "")}-${v.libc}") name;
-            value = mkPython v;
-          }
-        ]
-      else
-        [ ]
-    ) (attrNames download-metadata)
-  );
+  # List of filtered Python download entries based on current platform
+  filtered = concatMap (
+    name:
+    let
+      v = download-metadata.${name};
+    in
+    if
+      (
+        # Match architecture/variant
+        v.arch.family == archFamily
+        && v.arch.variant == archVariant
+        # Match os/platform
+        && v.os == os
+        && (v.libc == "none" || v.libc == libc)
+      )
+    then
+      [ v ]
+    else
+      [ ]
+  ) (attrNames download-metadata);
+
+  # Only create short aliases for non-prereleases
+  releases = filter (v: v.prerelease == "") filtered;
+
+  packages =
+    listToAttrs (
+      map (v: {
+        name = mkName v;
+        value = mkPython v;
+      }) filtered
+    )
+    // mapAttrs (_: candidates: packages.${(mkName (lib.last candidates))}) (
+      groupBy mkShortName releases
+    );
 in
-filtered
+packages
