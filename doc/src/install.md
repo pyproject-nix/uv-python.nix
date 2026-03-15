@@ -11,9 +11,10 @@ let
   inherit (pkgs) lib;
 
   uv-pythons = pkgs.callPackage (import (builtins.fetchGit {
-    url = "https://github.com/pyproject-nix/uv-python.git";
+    url = "https://github.com/pyproject-nix/uv-python.nix.git";
   }) { }) { };
 
+  python = uv-python.packages.${system}."cpython-3.10";
 in
   ...
 ```
@@ -21,7 +22,7 @@ in
 ## Flakes
 ``` nix
 let
-  python = uv-python.packages.${system}."cpython-3.10.4";
+  python = uv-python.packages.${system}."cpython-3.10";
 in
   ...
 ```
