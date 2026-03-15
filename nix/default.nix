@@ -102,7 +102,9 @@ stdenv.mkDerivation {
     ++ lib.optional (implementation == "pypy") libxft
   ;
 
-  ${if hackAutoPatchelf then "postFixup" else null} = ''
+  postFixup = ''
+    python3 ${./fixup-pc.py}
+  '' + lib.optionalString hackAutoPatchelf ''
     python3 ${./fixup.py}
     autoPatchelf $out/lib
     for bin in $out/bin/.*-wrapped; do
