@@ -35,7 +35,9 @@ in
 let
   inherit (stdenv) isLinux isDarwin;
 
-  archFamily = if isDarwin then stdenv.targetPlatform.darwinArch else stdenv.targetPlatform.qemuArch;
+  archFamily =
+    if stdenv.targetPlatform.isArmv7 then "armv7"
+    else stdenv.targetPlatform.qemuArch;
 
   os =
     if isLinux then
