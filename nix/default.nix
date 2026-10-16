@@ -93,7 +93,7 @@ stdenv.mkDerivation {
     zstd
     python3
   ]
-    ++ lib.optional (!stdenv.isDarwin) autoPatchelfHook;
+    ++ lib.optional (!stdenv.hostPlatform.isDarwin) autoPatchelfHook;
 
   buildInputs = [
     libxcrypt-legacy

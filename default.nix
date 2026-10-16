@@ -33,7 +33,7 @@ in
   archVariant ? null,
 }:
 let
-  inherit (stdenv) isLinux isDarwin;
+  inherit (stdenv.hostPlatform) isLinux isDarwin;
 
   archFamily =
     if stdenv.targetPlatform.isArmv7 then "armv7"
